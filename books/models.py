@@ -3,12 +3,12 @@ from decimal import Decimal
 from django.core.validators import MinValueValidator
 
 
-class Author(models.model):
+class Author(models.Model):
     first_name = models.CharField(max_length=25)
     last_name = models.CharField(max_length=35)
 
     def __str__(self):
-        return f"{self.last_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name}"
 
 
 class Book(models.Model):
@@ -17,7 +17,9 @@ class Book(models.Model):
         SOFT = "SOFT", "Soft"
 
     title = models.CharField(max_length=255)
-    author = models.ForeignKey(Author, related_name="written_books")
+    author = models.ForeignKey(
+        Author, related_name="written_books", on_delete=models.CASCADE
+    )
     cover = models.CharField(
         max_length=4, choices=CoverChoices.choices, default=CoverChoices.HARD
     )
