@@ -2,12 +2,22 @@ from rest_framework import serializers
 from books.models import Book, Author
 
 
-class BookSerializer(serializers.ModelSerializer):
-    author = serializers.StringRelatedField()
-
+class BookRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = ["id", "title", "author", "cover", "inventory", "daily_fee"]
+        fields = [
+            "id",
+            "title",
+            "author",
+            "cover",
+            "inventory",
+            "daily_fee",
+            "synopsis",
+        ]
+
+
+class BookSerializer(BookRetrieveSerializer):
+    author = serializers.StringRelatedField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
