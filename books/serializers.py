@@ -9,6 +9,15 @@ class BookSerializer(serializers.ModelSerializer):
         model = Book
         fields = ["id", "title", "author", "cover", "inventory", "daily_fee"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        request = self.context.get("request")
+        if request and request.method in ["POST", "PUT", "PATCH"]:
+            self.fields["author"] = serializers.PrimaryKeyRelatedField(
+                queryset=Author.objects.all()
+            )
+
 
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
