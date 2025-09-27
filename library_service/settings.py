@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "books.apps.BooksConfig",
     "users.apps.UsersConfig",
+    "borrowings.apps.BorrowingsConfig",
 ]
 
 MIDDLEWARE = [
