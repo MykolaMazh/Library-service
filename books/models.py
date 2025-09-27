@@ -20,6 +20,7 @@ class Book(models.Model):
     author = models.ForeignKey(
         Author, related_name="written_books", on_delete=models.CASCADE
     )
+    synopsis = models.TextField()
     cover = models.CharField(
         max_length=4, choices=CoverChoices.choices, default=CoverChoices.HARD
     )

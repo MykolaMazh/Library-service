@@ -13,10 +13,17 @@ class BookSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
 
         request = self.context.get("request")
-        if request and request.method in ["POST", "PUT", "PATCH"]:
-            self.fields["author"] = serializers.PrimaryKeyRelatedField(
-                queryset=Author.objects.all()
-            )
+        if request:
+            if request.method in ["POST", "PUT", "PATCH"]:
+                self.fields["author"] = serializers.PrimaryKeyRelatedField(
+                    queryset=Author.objects.all()
+                )
+            elif request.method == "GET":
+                self.fields["synopsis"] = serializers.SerializerMethodField()
+
+    def get_synopsis(self, obj):
+        words = obj.synopsis.split()
+        return " ".join(words[:15]) + ("..." if len(words) > 15 else "")
 
 
 class AuthorSerializer(serializers.ModelSerializer):
