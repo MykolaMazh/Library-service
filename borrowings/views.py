@@ -32,4 +32,4 @@ class BorrowingViewSet(
         is_active = self.request.query_params.get("is_active")
         if is_active:
             queryset = queryset.filter(actual_return_date__isnull=True)
-        return queryset
+        return queryset.select_related("book", "user", "book__author")

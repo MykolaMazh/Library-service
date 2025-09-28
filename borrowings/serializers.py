@@ -1,14 +1,23 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 
 from borrowings.models import Borrowing
 
 
+User = get_user_model()
+
+
 class BorrowingListSerializer(serializers.ModelSerializer):
+    book = serializers.StringRelatedField()
+    user = serializers.StringRelatedField()
+    user_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+
     class Meta:
         model = Borrowing
         fields = [
             "book",
             "user",
+            "user_id",
             "borrow_date",
             "expected_return_date",
             "actual_return_date",
