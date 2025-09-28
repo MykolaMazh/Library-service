@@ -3,7 +3,7 @@ from rest_framework import serializers
 from borrowings.models import Borrowing
 
 
-class BorrowingSerializer(serializers.ModelSerializer):
+class BorrowingListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Borrowing
         fields = [
@@ -12,6 +12,16 @@ class BorrowingSerializer(serializers.ModelSerializer):
             "borrow_date",
             "expected_return_date",
             "actual_return_date",
+        ]
+
+
+class BorrowingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Borrowing
+        fields = [
+            "book",
+            "borrow_date",
+            "expected_return_date",
         ]
 
     def validate_book(self, book):
