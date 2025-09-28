@@ -29,4 +29,7 @@ class BorrowingViewSet(
         if users:
             users_ids = [int(str_id) for str_id in users.split(",")]
             queryset = Borrowing.objects.filter(user_id__in=users_ids)
+        is_active = self.request.query_params.get("is_active")
+        if is_active:
+            queryset = queryset.filter(actual_return_date__isnull=True)
         return queryset
