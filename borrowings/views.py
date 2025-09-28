@@ -22,3 +22,11 @@ class BorrowingViewSet(
         if self.action in ("list", "rertrieve"):
             return BorrowingListSerializer
         return BorrowingSerializer
+
+    def get_queryset(self):
+        users = self.request.query_params.get("user_id")
+        queryset = Borrowing.objects.all()
+        if users:
+            users_ids = [int(str_id) for str_id in users.split(",")]
+            queryset = Borrowing.objects.filter(user_id__in=users_ids)
+        return queryset
