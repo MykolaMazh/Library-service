@@ -1,4 +1,9 @@
+import datetime
+
+from django.shortcuts import get_object_or_404
 from rest_framework import mixins, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from borrowings.models import Borrowing
 from borrowings.serializers import BorrowingSerializer, BorrowingListSerializer
@@ -33,3 +38,16 @@ class BorrowingViewSet(
         if is_active:
             queryset = queryset.filter(actual_return_date__isnull=True)
         return queryset.select_related("book", "user", "book__author")
+
+    @action(detail=True, methods=["post"], url_path="return")
+    def return_book(self, request, pk):
+        borrowing = get_object_or_404(Borrowing, pk=pk)
+        return_date = datetime.date.today()
+        borrowing.actual_return_date = return_date
+        borrowing.book.inventory += 1
+        borrowing.save()
+        return Response(
+            {
+                "status": f"The book has been returned at {return_date}",
+            }
+        )
