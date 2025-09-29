@@ -48,6 +48,14 @@ class BorrowingViewSet(
     @action(detail=True, methods=["post"], url_path="return")
     def return_book(self, request, pk):
         borrowing = get_object_or_404(Borrowing, pk=pk)
+        if borrowing:
+            book = borrowing.book
+            if borrowing.actual_return_date:
+                return Response(
+                    {
+                        "status": f'"{book}" has already been returned on {borrowing.actual_return_date}',
+                    }
+                )
         return_date = datetime.date.today()
         borrowing.actual_return_date = return_date
         borrowing.book.inventory += 1
