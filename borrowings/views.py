@@ -1,6 +1,7 @@
 import datetime
 
 from django.shortcuts import get_object_or_404
+from django.db import transaction
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -26,7 +27,7 @@ class BorrowingViewSet(
         borrowing.book.save()
 
     def get_serializer_class(self):
-        if self.action in ("list", "rertrieve"):
+        if self.action in ("list", "retrieve"):
             return BorrowingListSerializer
         return BorrowingSerializer
 
@@ -57,11 +58,14 @@ class BorrowingViewSet(
                     }
                 )
         return_date = datetime.date.today()
-        borrowing.actual_return_date = return_date
-        borrowing.book.inventory += 1
-        borrowing.save()
+        with transaction.atomic():
+            borrowing.actual_return_date = return_date
+            borrowing.save()
+            book.inventory += 1
+            book.save()
+
         return Response(
             {
-                "status": f"The book has been returned at {return_date}",
+                "status": f'"{book}" has been returned on {return_date}',
             }
         )
