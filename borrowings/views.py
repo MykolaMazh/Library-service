@@ -66,6 +66,6 @@ class BorrowingViewSet(
 
         return Response(
             {
-                "status": f'"{book}" has been returned on {return_date}',
+                "status": f'Thank You. "{book}" has been returned on {return_date}.',
             }
         )
