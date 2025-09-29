@@ -32,7 +32,11 @@ class BorrowingViewSet(
 
     def get_queryset(self):
         users = self.request.query_params.get("user_id")
-        queryset = Borrowing.objects.all()
+        queryset = (
+            Borrowing.objects.all()
+            if self.request.user.is_staff
+            else Borrowing.objects.filter(user=self.request.user)
+        )
         if users:
             users_ids = [int(str_id) for str_id in users.split(",")]
             queryset = Borrowing.objects.filter(user_id__in=users_ids)
