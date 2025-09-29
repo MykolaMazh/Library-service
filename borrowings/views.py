@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from borrowings.models import Borrowing
+from borrowings.permissions import IsBorrower
 from borrowings.serializers import BorrowingSerializer, BorrowingListSerializer
 
 
@@ -17,6 +18,7 @@ class BorrowingViewSet(
 ):
     queryset = Borrowing.objects.all()
     serializer_class = BorrowingSerializer
+    permission_classes = [IsBorrower]
 
     def perform_create(self, serializer):
         borrowing = serializer.save(user=self.request.user)
