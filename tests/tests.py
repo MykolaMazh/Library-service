@@ -36,24 +36,10 @@ def create_user(self, user: str, is_staff=False):
     )
 
 
-class BookApiTests(APITestCase):
+class BooksApiTests(APITestCase):
 
     def setUp(self):
         self.client = APIClient()
-
-    def test_register_user(self):
-        payload = {
-            "email": "newuser@example.com",
-            "password": "newpass123",
-        }
-        res = self.client.post(reverse(REGISTER_URL), payload)
-        self.assertEqual(
-            res.status_code,
-            status.HTTP_201_CREATED,
-            msg="The user should be created with email instead of nickname",
-        )
-        user_exists = User.objects.filter(email=payload["email"]).exists()
-        self.assertTrue(user_exists)
 
     def test_only_admin_can_manage_books(self):
         author = Author.objects.create(
@@ -99,3 +85,23 @@ class BookApiTests(APITestCase):
             status.HTTP_200_OK,
             msg="non-admin user should has access to get requests",
         )
+
+
+class UsersApiTests(APITestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_register_user(self):
+        payload = {
+            "email": "newuser@example.com",
+            "password": "newpass123",
+        }
+        res = self.client.post(reverse(REGISTER_URL), payload)
+        self.assertEqual(
+            res.status_code,
+            status.HTTP_201_CREATED,
+            msg="The user should be created with email instead of nickname",
+        )
+        user_exists = User.objects.filter(email=payload["email"]).exists()
+        self.assertTrue(user_exists)
