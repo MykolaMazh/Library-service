@@ -24,11 +24,13 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
-        "api/schema/swagger-ui/",
+        "api/doc/",
         SpectacularSwaggerView.as_view(url_name="schema"),
         name="swagger-ui",
     ),
-    path("books/", include("books.urls", namespace="books")),
-    path("users/", include("users.urls", namespace="users")),
-    path("borrowings/", include("borrowings.urls", namespace="borrowings")),
+    path("api/books/", include("books.urls", namespace="books")),
+    path("api/users/", include("users.urls", namespace="users")),
+    path(
+        "api/borrowings/", include("borrowings.urls", namespace="borrowings")
+    ),
 ] + debug_toolbar_urls()
