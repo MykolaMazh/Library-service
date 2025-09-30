@@ -20,8 +20,3 @@ class RetrieveUpdateUserView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return User.objects.get(pk=self.request.user.pk)
-
-    # def get_serializer_class(self):
-    #     if self.request.method == "GET":
-    #         return UserRetrieveSerializer
-    #     return UserUpdateSerializer
