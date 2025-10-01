@@ -33,3 +33,10 @@ class Book(models.Model):
 
     def __str__(self):
         return f"{self.title} by {self.author}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["title", "author"], name="unique_author_for_book_title"
+            )
+        ]

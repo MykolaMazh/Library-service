@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 from books.models import Book, Author
 
 
@@ -19,9 +20,17 @@ class BookRetrieveSerializer(serializers.ModelSerializer):
 class BookSerializer(BookRetrieveSerializer):
     author = serializers.StringRelatedField()
 
+    class Meta(BookRetrieveSerializer.Meta):
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Book.objects.all(),
+                fields=["title", "author"],
+                message="This author already has a book with this title.",
+            )
+        ]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         request = self.context.get("request")
         if request:
             if request.method in ["POST", "PUT", "PATCH"]:

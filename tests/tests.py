@@ -12,23 +12,23 @@ BOOK_LIST = "books:book-list"
 BOOK_DETAIL = "books:book-detail"
 
 
-def create_book(self, _id):
+def create_book(_id: int):
     Author.objects.create(
         first_name=f"Author_book_{_id}_name",
         last_name=f"Author_book_{_id}_surname",
     )
 
-    Book.objects.create(
-        title=f"Book-{id} title",
+    return Book.objects.create(
+        title=f"Book-{_id} title",
         author=Author.objects.last(),
         cover="HARD",
         inventory=_id,
         daily_fee=1.15,
-        synopsis=f"Book-{id} synopsis",
+        synopsis=f"Book-{_id} synopsis",
     )
 
 
-def create_user(self, user: str, is_staff=False):
+def _create_user(self, user: str, is_staff=False):
     return User.objects.create_user(
         email=f"{user}@example.com",
         password="testpass123",
@@ -51,15 +51,15 @@ class BooksApiTests(APITestCase):
             "cover": "HARD",
             "inventory": 2,
             "daily_fee": 1.15,
-            "synopsis": f"Book-{id} synopsis",
+            "synopsis": "Book synopsis",
         }
-        user = create_user(self, "user")
+        user = _create_user(self, "user")
         self.client.force_authenticate(user)
         response = self.client.post(reverse(BOOK_LIST), payload)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Book.objects.count(), 0)
 
-        admin_user = create_user(self, "admin_user", is_staff=True)
+        admin_user = _create_user(self, "admin_user", is_staff=True)
         self.client.force_authenticate(admin_user)
         response = self.client.post(reverse(BOOK_LIST), payload)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -85,7 +85,6 @@ class BooksApiTests(APITestCase):
             status.HTTP_200_OK,
             msg="non-admin user should has access to get requests",
         )
-
 
 class UsersApiTests(APITestCase):
 
