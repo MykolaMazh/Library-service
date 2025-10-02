@@ -5,6 +5,7 @@ from django.db import transaction
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
 
 from borrowings.models import Borrowing
 from borrowings.permissions import IsBorrower
@@ -69,3 +70,10 @@ class BorrowingViewSet(
                 "status": f'Thank You. "{book}" has been returned on {return_date}.',
             }
         )
+
+    @extend_schema(
+        summary="Borrow a book.",
+        description="Create new Borrowing instance. Authentication required.",
+    )
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
