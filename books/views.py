@@ -15,7 +15,7 @@ from books.serializers import (
     description="only admin users can edit. For users only get-requests available",
 )
 class BookViewSet(ModelViewSet):
-    queryset = Book.objects.all()
+    queryset = Book.objects.filter(inventory__gt=0)
     permission_classes = [IsAdminOrReadOnly]
 
     def get_serializer_class(self):
