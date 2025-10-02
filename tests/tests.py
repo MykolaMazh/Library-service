@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -190,4 +192,42 @@ class BorrowingApiTests(APITestCase):
             response.status_code,
             status.HTTP_404_NOT_FOUND,
             msg="user has access only to own borrowing",
+        )
+
+    def test_list_with_query_params(self):
+        for book_id in range(10, 20):
+            create_book(book_id)
+        user1 = _create_user("user1")
+        for i in range(2):
+            Borrowing.objects.create(
+                user=user1,
+                book=Book.objects.order_by("?").first(),
+                expected_return_date="2026-10-02",
+            )
+
+        user2 = _create_user("user2")
+        self.client.force_authenticate(user2)
+        for i in range(2):
+            Borrowing.objects.create(
+                user=user2,
+                book=Book.objects.order_by("?").first(),
+                expected_return_date="2026-10-02",
+            )
+        response = self.client.get(
+            reverse(BORROWING_LIST) + "?user_id=" + str(user1.id)
+        )
+        self.assertEqual(
+            len(response.data), 0, msg='users can\'t use filter by "user_id"'
+        )
+
+        borrowing = Borrowing.objects.filter(user=user2).last()
+        borrowing.actual_return_date = date.today()
+        borrowing.save()
+        response = self.client.get(
+            reverse(BORROWING_LIST) + "?is_active=" + " "
+        )
+        self.assertEqual(
+            len(response.data),
+            1,
+            msg='is_active displays only not returned books."',
         )
