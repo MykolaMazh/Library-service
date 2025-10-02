@@ -12,6 +12,7 @@ REGISTER_URL = "users:register"
 BOOK_LIST = "books:book-list"
 BOOK_DETAIL = "books:book-detail"
 BORROWING_LIST = "borrowings:borrowing-list"
+BORROWING_DETAIL = "borrowings:borrowing-detail"
 
 
 def create_book(id_inventory: int):
@@ -141,7 +142,8 @@ class BorrowingApiTests(APITestCase):
 
     def test_reduce_inventory(self):
         user1 = _create_user("user1")
-        book = create_book(8)
+        book_inventory = 8
+        book = create_book(book_inventory)
         borrow_data = {
             "book": Book.objects.last().id,
             "expected_return_date": "2026-10-02",
@@ -152,4 +154,40 @@ class BorrowingApiTests(APITestCase):
             data=borrow_data,
         )
         book.refresh_from_db()
-        self.assertEqual(book.inventory, 7)
+        self.assertEqual(book.inventory, book_inventory - 1)
+
+    def test_access_only_own_borrowings(self):
+        book1 = create_book(1)
+        user1 = _create_user("user1")
+        self.client.force_authenticate(user1)
+        borrow_data = {
+            "book": Book.objects.last().id,
+            "expected_return_date": "2026-10-02",
+        }
+        self.client.post(
+            reverse(BORROWING_LIST),
+            data=borrow_data,
+        )
+
+        book2 = create_book(2)
+        borrow_data.update({"book": Book.objects.last().id})
+        user2 = _create_user("user2")
+        self.client.force_authenticate(user2)
+        self.client.post(reverse(BORROWING_LIST), data=borrow_data),
+        self.assertEqual(Borrowing.objects.count(), 2)
+
+        response = self.client.get(reverse(BORROWING_LIST))
+        self.assertEqual(
+            len(response.data),
+            1,
+            msg="user has access only to own borrowings list",
+        )
+
+        response = self.client.get(
+            reverse(BORROWING_DETAIL, args=[Borrowing.objects.first().id])
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_404_NOT_FOUND,
+            msg="user has access only to own borrowing",
+        )
