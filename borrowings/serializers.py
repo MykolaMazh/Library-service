@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.urls import reverse
 
 from borrowings.models import Borrowing
 
@@ -9,20 +10,25 @@ User = get_user_model()
 
 class BorrowingListSerializer(serializers.ModelSerializer):
     book = serializers.StringRelatedField()
-    user = serializers.StringRelatedField()
-    user_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
     class Meta:
         model = Borrowing
         fields = [
             "id",
             "book",
-            "user",
-            "user_id",
             "borrow_date",
             "expected_return_date",
             "actual_return_date",
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get("request")
+        if request.method == "GET" and request.user.is_staff:
+            self.fields["user"] = serializers.StringRelatedField()
+            self.fields["user_id"] = serializers.PrimaryKeyRelatedField(
+                queryset=User.objects.all()
+            )
 
 
 class BorrowingSerializer(serializers.ModelSerializer):
@@ -30,7 +36,6 @@ class BorrowingSerializer(serializers.ModelSerializer):
         model = Borrowing
         fields = [
             "book",
-            "borrow_date",
             "expected_return_date",
         ]
 
