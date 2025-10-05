@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.urls import reverse
 from rest_framework import status
@@ -10,26 +10,28 @@ from books.models import Book, Author
 from borrowings.models import Borrowing
 
 User = get_user_model()
+expected_return_date = date.today() + timedelta(days=5)
 REGISTER_URL = "users:register"
 BOOK_LIST = "books:book-list"
 BOOK_DETAIL = "books:book-detail"
 BORROWING_LIST = "borrowings:borrowing-list"
 BORROWING_DETAIL = "borrowings:borrowing-detail"
+RETURN_URL = "borrowings:borrowing-return-book"
 
 
-def create_book(id_inventory: int):
+def create_book(suffix_inventory: int):
     Author.objects.create(
-        first_name=f"Author_book_{id_inventory}_name",
-        last_name=f"Author_book_{id_inventory}_surname",
+        first_name=f"Author_book_{suffix_inventory}_name",
+        last_name=f"Author_book_{suffix_inventory}_surname",
     )
 
     return Book.objects.create(
-        title=f"Book-{id_inventory} title",
+        title=f"Book-{suffix_inventory} title",
         author=Author.objects.last(),
         cover="HARD",
-        inventory=id_inventory,
+        inventory=suffix_inventory,
         daily_fee=1.15,
-        synopsis=f"Book-{id_inventory} synopsis",
+        synopsis=f"Book-{suffix_inventory} synopsis",
     )
 
 
@@ -119,10 +121,10 @@ class BorrowingApiTests(APITestCase):
 
     def test_authenticate_to_borrow(self):
         user1 = _create_user("user1")
-        book = create_book(1)
+        book = create_book(suffix_inventory=1)
         borrow_data = {
             "book": Book.objects.last().id,
-            "expected_return_date": "2026-10-02",
+            "expected_return_date": expected_return_date,
         }
         response = self.client.post(
             reverse(BORROWING_LIST),
@@ -145,13 +147,13 @@ class BorrowingApiTests(APITestCase):
     def test_reduce_inventory(self):
         user1 = _create_user("user1")
         book_inventory = 8
-        book = create_book(book_inventory)
+        book = create_book(suffix_inventory=book_inventory)
         borrow_data = {
             "book": Book.objects.last().id,
-            "expected_return_date": "2026-10-02",
+            "expected_return_date": expected_return_date,
         }
         self.client.force_authenticate(user1)
-        response = self.client.post(
+        self.client.post(
             reverse(BORROWING_LIST),
             data=borrow_data,
         )
@@ -159,19 +161,19 @@ class BorrowingApiTests(APITestCase):
         self.assertEqual(book.inventory, book_inventory - 1)
 
     def test_access_only_own_borrowings(self):
-        book1 = create_book(1)
+        book1 = create_book(suffix_inventory=1)
         user1 = _create_user("user1")
         self.client.force_authenticate(user1)
         borrow_data = {
             "book": Book.objects.last().id,
-            "expected_return_date": "2026-10-02",
+            "expected_return_date": expected_return_date,
         }
         self.client.post(
             reverse(BORROWING_LIST),
             data=borrow_data,
         )
 
-        book2 = create_book(2)
+        book2 = create_book(suffix_inventory=2)
         borrow_data.update({"book": Book.objects.last().id})
         user2 = _create_user("user2")
         self.client.force_authenticate(user2)
@@ -195,14 +197,14 @@ class BorrowingApiTests(APITestCase):
         )
 
     def test_list_with_query_params(self):
-        for book_id in range(10, 20):
-            create_book(book_id)
+        for _ in range(10, 20):
+            create_book(suffix_inventory=_)
         user1 = _create_user("user1")
         for i in range(2):
             Borrowing.objects.create(
                 user=user1,
                 book=Book.objects.order_by("?").first(),
-                expected_return_date="2026-10-02",
+                expected_return_date=expected_return_date,
             )
 
         user2 = _create_user("user2")
@@ -211,7 +213,7 @@ class BorrowingApiTests(APITestCase):
             Borrowing.objects.create(
                 user=user2,
                 book=Book.objects.order_by("?").first(),
-                expected_return_date="2026-10-02",
+                expected_return_date=expected_return_date,
             )
         response = self.client.get(
             reverse(BORROWING_LIST) + "?user_id=" + str(user1.id)
@@ -231,3 +233,20 @@ class BorrowingApiTests(APITestCase):
             1,
             msg='is_active displays only not returned books."',
         )
+
+    def test_return_book(self):
+        book = create_book(suffix_inventory=10)
+        for i in range(3):
+            user = _create_user(f"user{i}")
+            self.client.force_authenticate(user)
+            self.client.post(
+                reverse(BORROWING_LIST),
+                data={
+                    "book": book.id,
+                    "expected_return_date": expected_return_date,
+                },
+            )
+
+        borrowing = Borrowing.objects.get(user=user)
+        self.client.post(reverse(RETURN_URL, args=[borrowing.id]))
+        self.assertEqual(Book.objects.get(id=1).inventory, 8)
