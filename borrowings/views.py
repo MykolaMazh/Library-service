@@ -12,6 +12,9 @@ from borrowings.permissions import IsBorrower
 from borrowings.serializers import BorrowingSerializer, BorrowingListSerializer
 
 
+null = None
+
+
 class BorrowingViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
@@ -84,3 +87,85 @@ class BorrowingViewSet(
     )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
+
+    @extend_schema(
+        summary="Get list of borrowings",
+        description="User can get own borrowings list and filter by ''is_active''(is a book returned or not)."
+        "Admin user can get all users' borrowings and filter by ''user_id''",
+        # Define a path parameter named "id"
+        parameters=[
+            OpenApiParameter(
+                name="user_id",
+                description="The user’s ID used to retrieve their borrowings.",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+            ),
+            OpenApiParameter(
+                name="is_active",
+                description="Parameter to get only active borrowings(borrowings of books that haven’t been returned yet). Should be ANY STRING",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                response=List[OpenApiTypes.OBJECT],
+                description="Responses",
+                examples=[
+                    OpenApiExample(
+                        name="Response body for non-admin user",
+                        value=[
+                            {
+                                "id": 18,
+                                "book": "Call of the Camino22 by Suzanne Redfearn",
+                                "borrow_date": "2025-10-05",
+                                "expected_return_date": "2025-10-09",
+                                "actual_return_date": null,
+                            },
+                            {
+                                "id": 19,
+                                "book": "Call of the Camino23 by Suzanne Redfearn",
+                                "borrow_date": "2025-10-05",
+                                "expected_return_date": "2025-10-09",
+                                "actual_return_date": "2025-10-05",
+                            },
+                        ],
+                    ),
+                    OpenApiExample(
+                        name="Response body for admin user",
+                        value=[
+                            {
+                                "id": 18,
+                                "book": "Call of the Camino22 by Suzanne Redfearn",
+                                "borrow_date": "2025-10-05",
+                                "expected_return_date": "2025-10-09",
+                                "actual_return_date": null,
+                                "user": "user1@gmail.com",
+                                "user_id": 1,
+                            },
+                            {
+                                "id": 19,
+                                "book": "Call of the Camino23 by Suzanne Redfearn",
+                                "borrow_date": "2025-10-05",
+                                "expected_return_date": "2025-10-09",
+                                "actual_return_date": "2025-10-05",
+                                "user": "user1@gmail.com",
+                                "user_id": 1,
+                            },
+                            {
+                                "id": 20,
+                                "book": "King of Ashes by A.C. Colby",
+                                "borrow_date": "2025-10-05",
+                                "expected_return_date": "2025-10-09",
+                                "actual_return_date": null,
+                                "user": "user3@gmail.com",
+                                "user_id": 3,
+                            },
+                        ],
+                    ),
+                ],
+            )
+        },
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
