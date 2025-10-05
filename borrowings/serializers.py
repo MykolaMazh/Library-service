@@ -1,6 +1,7 @@
+from datetime import date
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django.urls import reverse
+
 
 from borrowings.models import Borrowing
 
@@ -45,3 +46,10 @@ class BorrowingSerializer(serializers.ModelSerializer):
                 "This book is currently unavailable (no inventory)."
             )
         return book
+
+    def validate_expected_return_date(self, expected_return_date):
+        if expected_return_date < date.today():
+            raise serializers.ValidationError(
+                "Return date cannot be earlier than actual date."
+            )
+        return expected_return_date
