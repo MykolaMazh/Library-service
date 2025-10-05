@@ -1,11 +1,18 @@
 import datetime
+from typing import List
 
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema, OpenApiExample
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiExample,
+    OpenApiParameter,
+    OpenApiTypes,
+    OpenApiResponse,
+)
 
 from borrowings.models import Borrowing
 from borrowings.permissions import IsBorrower
@@ -50,6 +57,11 @@ class BorrowingViewSet(
             queryset = queryset.filter(actual_return_date__isnull=True)
         return queryset.select_related("book", "user", "book__author")
 
+    @extend_schema(
+        summary="Return a borrowed book.",
+        description="Return borrowed book with provided id.",
+        request=None,
+    )
     @action(detail=True, methods=["post"], url_path="return")
     def return_book(self, request, pk):
         borrowing = get_object_or_404(Borrowing, pk=pk)
