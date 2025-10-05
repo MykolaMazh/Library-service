@@ -5,7 +5,7 @@ from django.db import transaction
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiExample
 
 from borrowings.models import Borrowing
 from borrowings.permissions import IsBorrower
@@ -74,6 +74,13 @@ class BorrowingViewSet(
     @extend_schema(
         summary="Borrow a book.",
         description="Create new Borrowing instance. Authentication required.",
+        examples=[
+            OpenApiExample(
+                name="Example",
+                description='"book" is the  Book instance\'s id',
+                value={"book": 3, "expected_return_date": "2025-10-05"},
+            )
+        ],
     )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
