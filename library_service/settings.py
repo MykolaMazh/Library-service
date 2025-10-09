@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "rest_framework",
     "drf_spectacular",
+    "django_extensions",
     "books.apps.BooksConfig",
     "users.apps.UsersConfig",
     "borrowings.apps.BorrowingsConfig",
