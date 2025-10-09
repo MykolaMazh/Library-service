@@ -25,6 +25,13 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class UserRetrieveUpdateSerializer(serializers.ModelSerializer):
+    books_to_return = serializers.SerializerMethodField()
+
+    def get_books_to_return(self, obj):
+        return obj.borrowing_set.filter(
+            actual_return_date__isnull=True
+        ).count()
+
     class Meta:
         model = get_user_model()
         fields = (
@@ -34,6 +41,7 @@ class UserRetrieveUpdateSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "is_staff",
+            "books_to_return",
         )
         extra_kwargs = {
             "password": {"write_only": True, "min_length": 5},
