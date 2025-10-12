@@ -29,3 +29,10 @@ pyproject.toml
 
 # Dumps
 dump.json
+
+
+# Celery & Celery Beat runtime files
+celerybeat-schedule
+celerybeat-schedule.*
+celery.beat.*
+celery.loaders.*
