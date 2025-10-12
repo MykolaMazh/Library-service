@@ -18,18 +18,21 @@ def send_telegram_message(text: str):
 
     response = requests.post(url, data=payload)
     if not response.ok:
-        raise Exception(f"Esception: {response.text}")
+        raise Exception(f"Exception: {response.text}")
 
 
 def send_telegram_overdue_message(borrowing: Borrowing):
 
     text = (
-        f"Borrowing {borrowing.id} is overdue!\n"
-        f"user: {borrowing.user}\n"
-        f"borrow date: {borrowing.borrow_date}\n"
-        "*NOT RETURNED ON*\n"
-        f"*expected return date*: {borrowing.expected_return_date}"
+        f"📚📚📚 *OVERDUE BORROWING ALERT!* 📚📚📚\n\n"
+        f"📖 *Borrowing ID:* {borrowing.id}\n"
+        f"👤 *User:* {borrowing.user}\n"
+        f"📅 *Borrow date:* {borrowing.borrow_date}\n"
+        f"⚠️ *Not returned on time!*\n"
+        f"⏰ *Expected return date:* {borrowing.expected_return_date}\n\n"
+        f"📚📚📚 Please remind the user to return their book 📚📚📚"
     )
+
     payload = {"chat_id": CHAT_ID, "text": text, "parse_mode": "Markdown"}
 
     response = requests.post(url, data=payload)
