@@ -15,9 +15,9 @@ class Borrowing(models.Model):
     actual_return_date = models.DateField(blank=True, null=True)
 
     def clean(self):
-        if (
-            self.expected_return_date < self.borrow_date
-            or self.actual_return_date < self.borrow_date
+        if self.expected_return_date < self.borrow_date or (
+            self.actual_return_date
+            and self.actual_return_date < self.borrow_date
         ):
             raise ValidationError(
                 "Return date cannot be earlier than borrow date."
