@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from unittest.mock import patch
 
 from django.urls import reverse
 from rest_framework import status
@@ -250,3 +251,29 @@ class BorrowingApiTests(APITestCase):
         borrowing = Borrowing.objects.get(user=user)
         self.client.post(reverse(RETURN_URL, args=[borrowing.id]))
         self.assertEqual(Book.objects.get(id=1).inventory, 8)
+
+    @patch("borrowings.signals.send_telegram_message")
+    def test_notify_new_borrowing_signal(self, mock_send):
+        user = _create_user("user")
+        self.client.force_authenticate(user)
+        create_book(suffix_inventory=1)
+
+        Borrowing.objects.create(
+            user=user,
+            book=Book.objects.last(),
+            expected_return_date=expected_return_date,
+        )
+
+        mock_send.assert_called_once()
+
+        borrowing = Borrowing.objects.last()
+
+        text_from_instance_created = (
+            f"📚 ***New Borrowing Created!***\n\n"
+            f"User: {borrowing.user}\n"
+            f"Book: {borrowing.book.title}\n"
+            f"Borrow date: {borrowing.borrow_date}\n"
+            f"Due date: {borrowing.expected_return_date}"
+        )
+        text_from_message_sent = mock_send.call_args[0][0]
+        self.assertEqual(text_from_instance_created, text_from_message_sent)
