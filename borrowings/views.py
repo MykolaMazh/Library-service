@@ -88,7 +88,8 @@ class BorrowingViewSet(
 
     @extend_schema(
         summary="Borrow a book.",
-        description="Create new Borrowing instance. Authentication required.",
+        description="Create new Borrowing instance. Authentication required. After Borrowing instance has been created"
+        " notification is sent to Telegram chat.",
         examples=[
             OpenApiExample(
                 name="Example",
