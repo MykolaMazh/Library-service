@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 
 from books.models import Book, Author
 from borrowings.models import Borrowing
+from borrowings.tasks import get_overdue_borrowings
 
 User = get_user_model()
 expected_return_date = date.today() + timedelta(days=5)
@@ -115,12 +116,13 @@ class UsersApiTests(APITestCase):
         self.assertTrue(user_exists)
 
 
+@patch("borrowings.signals.send_telegram_message")
 class BorrowingApiTests(APITestCase):
 
     def setUp(self):
         self.client = APIClient()
 
-    def test_authenticate_to_borrow(self):
+    def test_authenticate_to_borrow(self, mock_send):
         user1 = _create_user("user1")
         book = create_book(suffix_inventory=1)
         borrow_data = {
@@ -145,7 +147,7 @@ class BorrowingApiTests(APITestCase):
             msg="created Borrowing instance's user is active user.",
         )
 
-    def test_reduce_inventory(self):
+    def test_reduce_inventory(self, mock_send):
         user1 = _create_user("user1")
         book_inventory = 8
         book = create_book(suffix_inventory=book_inventory)
@@ -161,7 +163,7 @@ class BorrowingApiTests(APITestCase):
         book.refresh_from_db()
         self.assertEqual(book.inventory, book_inventory - 1)
 
-    def test_access_only_own_borrowings(self):
+    def test_access_only_own_borrowings(self, mock_send):
         book1 = create_book(suffix_inventory=1)
         user1 = _create_user("user1")
         self.client.force_authenticate(user1)
@@ -197,7 +199,7 @@ class BorrowingApiTests(APITestCase):
             msg="user has access only to own borrowing",
         )
 
-    def test_list_with_query_params(self):
+    def test_list_with_query_params(self, mock_send):
         for _ in range(10, 20):
             create_book(suffix_inventory=_)
         user1 = _create_user("user1")
@@ -235,7 +237,7 @@ class BorrowingApiTests(APITestCase):
             msg='is_active displays only not returned books."',
         )
 
-    def test_return_book(self):
+    def test_return_book(self, mock_send):
         book = create_book(suffix_inventory=10)
         for i in range(3):
             user = _create_user(f"user{i}")
@@ -252,7 +254,6 @@ class BorrowingApiTests(APITestCase):
         self.client.post(reverse(RETURN_URL, args=[borrowing.id]))
         self.assertEqual(Book.objects.get(id=1).inventory, 8)
 
-    @patch("borrowings.signals.send_telegram_message")
     def test_notify_new_borrowing_signal(self, mock_send):
         user = _create_user("user")
         self.client.force_authenticate(user)
@@ -277,3 +278,30 @@ class BorrowingApiTests(APITestCase):
         )
         text_from_message_sent = mock_send.call_args[0][0]
         self.assertEqual(text_from_instance_created, text_from_message_sent)
+
+    @patch("borrowings.models.Borrowing.clean", return_value=None)
+    @patch("borrowings.tasks.send_telegram_overdue_message")
+    def test_notify_daily_overdue_borrowings(
+        self, mock_send_overdue, mock_clean, mock_send
+    ):
+        user = _create_user("user")
+        self.client.force_authenticate(user)
+        create_book(suffix_inventory=1)
+        create_book(suffix_inventory=2)
+
+        Borrowing.objects.create(
+            user=user,
+            book=Book.objects.last(),
+            expected_return_date=expected_return_date,
+        ),
+        overdue_borrowing = Borrowing.objects.create(
+            user=user,
+            book=Book.objects.first(),
+            expected_return_date=date.today() - timedelta(days=3),
+        )
+        overdue_borrowings = get_overdue_borrowings()
+
+        self.assertEqual(len(overdue_borrowings), 1)
+        self.assertEqual(overdue_borrowings[0], overdue_borrowing)
+
+        mock_send_overdue.assert_called_with(overdue_borrowing)
