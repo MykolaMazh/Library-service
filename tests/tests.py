@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from books.models import Book, Author
 from borrowings.models import Borrowing
 from borrowings.tasks import get_overdue_borrowings
+from payments.models import Payment
 
 User = get_user_model()
 expected_return_date = date.today() + timedelta(days=5)
@@ -19,6 +20,8 @@ BOOK_DETAIL = "books:book-detail"
 BORROWING_LIST = "borrowings:borrowing-list"
 BORROWING_DETAIL = "borrowings:borrowing-detail"
 RETURN_URL = "borrowings:borrowing-return-book"
+PAYMENTS_LIST = "payments:payment-list"
+PAYMENTS_DETAIL = "payments:payment-detail"
 
 
 def create_book(suffix_inventory: int):
@@ -143,7 +146,7 @@ class UsersApiTests(APITestCase):
 
 
 @patch("borrowings.signals.send_telegram_message")
-class BorrowingApiTests(APITestCase):
+class BorrowingsApiTests(APITestCase):
 
     def setUp(self):
         self.client = APIClient()
@@ -314,3 +317,35 @@ class BorrowingApiTests(APITestCase):
         self.assertEqual(overdue_borrowings[0], overdue_borrowing)
 
         mock_send_overdue.assert_called_with(overdue_borrowing)
+
+
+@patch("borrowings.signals.send_telegram_message")
+class PaymentsApiTests(APITestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_only_own_payments_visible(self, mock_send):
+        book = create_book(suffix_inventory=1)
+        user1 = _create_user("user1")
+        self.client.force_authenticate(user1)
+        borrowing = borrow_book(user1, book)
+        payment = _create_payment(borrowing)
+
+        staff_user = _create_user("staff_user", is_staff=True)
+
+        for user in user1, staff_user:
+            self.client.force_authenticate(user)
+            response = self.client.get(reverse(PAYMENTS_LIST))
+            self.assertEqual(len(response.data), 1)
+            response = self.client.get(
+                reverse(PAYMENTS_DETAIL, args=[payment.id])
+            )
+            self.assertEqual(response.status_code, 200)
+
+        user2 = _create_user("user2")
+        self.client.force_authenticate(user2)
+        response = self.client.get(reverse(PAYMENTS_LIST))
+        self.assertEqual(len(response.data), 0)
+        response = self.client.get(reverse(PAYMENTS_DETAIL, args=[payment.id]))
+        self.assertEqual(response.status_code, 404)
