@@ -45,6 +45,32 @@ def _create_user(user: str, is_staff=False):
     )
 
 
+def borrow_book(user, book):
+    return Borrowing.objects.create(
+        user=user,
+        book=book,
+        expected_return_date=expected_return_date,
+    )
+
+
+def _create_payment(
+    borrowing,
+    status="PENDING",
+    type="PAYMENT",
+    session_url="https://trello.com/b/wJIwEqup/my-trello-board",
+    session_id="1",
+    money_to_pay="3.30",
+):
+    return Payment.objects.create(
+        status=status,
+        type=type,
+        session_url=session_url,
+        session_id=session_id,
+        money_to_pay=money_to_pay,
+        borrowing=borrowing,
+    )
+
+
 class BooksApiTests(APITestCase):
 
     def setUp(self):
@@ -204,20 +230,12 @@ class BorrowingApiTests(APITestCase):
             create_book(suffix_inventory=_)
         user1 = _create_user("user1")
         for i in range(2):
-            Borrowing.objects.create(
-                user=user1,
-                book=Book.objects.order_by("?").first(),
-                expected_return_date=expected_return_date,
-            )
+            borrow_book(user1, Book.objects.order_by("?").first())
 
         user2 = _create_user("user2")
         self.client.force_authenticate(user2)
         for i in range(2):
-            Borrowing.objects.create(
-                user=user2,
-                book=Book.objects.order_by("?").first(),
-                expected_return_date=expected_return_date,
-            )
+            borrow_book(user2, Book.objects.order_by("?").first())
         response = self.client.get(
             reverse(BORROWING_LIST) + "?user_id=" + str(user1.id)
         )
@@ -258,12 +276,7 @@ class BorrowingApiTests(APITestCase):
         user = _create_user("user")
         self.client.force_authenticate(user)
         create_book(suffix_inventory=1)
-
-        Borrowing.objects.create(
-            user=user,
-            book=Book.objects.last(),
-            expected_return_date=expected_return_date,
-        )
+        borrow_book(user, Book.objects.last())
 
         mock_send.assert_called_once()
 
@@ -289,11 +302,7 @@ class BorrowingApiTests(APITestCase):
         create_book(suffix_inventory=1)
         create_book(suffix_inventory=2)
 
-        Borrowing.objects.create(
-            user=user,
-            book=Book.objects.last(),
-            expected_return_date=expected_return_date,
-        ),
+        borrow_book(user, Book.objects.last())
         overdue_borrowing = Borrowing.objects.create(
             user=user,
             book=Book.objects.first(),
