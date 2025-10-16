@@ -22,3 +22,16 @@ class Borrowing(models.Model):
             raise ValidationError(
                 "Return date cannot be earlier than borrow date."
             )
+
+    @property
+    def borrow_days(self):
+        return (self.expected_return_date - self.borrow_date).days + 1
+
+    @property
+    def fine_days(self):
+        if self.actual_return_date:
+            if self.actual_return_date > self.expected_return_date:
+                return (
+                    self.actual_return_date - self.expected_return_date
+                ).days
+        return 0
