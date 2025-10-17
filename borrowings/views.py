@@ -16,8 +16,11 @@ from drf_spectacular.utils import (
 
 from borrowings.models import Borrowing
 from borrowings.permissions import IsBorrower
-from borrowings.serializers import BorrowingSerializer, BorrowingListSerializer
-
+from borrowings.serializers import (
+    BorrowingSerializer,
+    BorrowingListSerializer,
+    BorrowingRetrieveSerializer,
+)
 
 null = None
 
@@ -38,8 +41,10 @@ class BorrowingViewSet(
         borrowing.book.save()
 
     def get_serializer_class(self):
-        if self.action in ("list", "retrieve"):
+        if self.action == "list":
             return BorrowingListSerializer
+        elif self.action == "retrieve":
+            return BorrowingRetrieveSerializer
         return BorrowingSerializer
 
     def get_queryset(self):
@@ -55,7 +60,11 @@ class BorrowingViewSet(
         is_active = self.request.query_params.get("is_active")
         if is_active:
             queryset = queryset.filter(actual_return_date__isnull=True)
-        return queryset.select_related("book", "user", "book__author")
+        return queryset.select_related(
+            "book",
+            "user",
+            "book__author",
+        ).prefetch_related("payment_set")
 
     @extend_schema(
         summary="Return a borrowed book.",
