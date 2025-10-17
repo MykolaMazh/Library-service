@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response,
+from rest_framework.response import Response
 import stripe
 
 from borrowings.models import Borrowing
@@ -21,9 +21,12 @@ class PaymentListApiView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        queryset = Payment.objects.select_related(
+            "borrowing", "borrowing__book"
+        )
         if self.request.user.is_staff:
-            return Payment.objects.all()
-        return Payment.objects.filter(borrowing__user=self.request.user)
+            return queryset
+        return queryset.filter(borrowing__user=self.request.user)
 
 
 class PaymentRetrieveUpdateApiView(generics.RetrieveUpdateAPIView):
@@ -42,8 +45,9 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class CreateCheckoutSessionView(APIView):
     def post(self, request, borrowing_id):
+
         borrowing = get_object_or_404(Borrowing, id=borrowing_id)
-        amount = int(borrowing.total_price * 100)  # amount in cents
+        amount = borrowing.borrow_days * 100  # amount in cents
 
         try:
             checkout_session = stripe.checkout.Session.create(
@@ -68,7 +72,7 @@ class CreateCheckoutSessionView(APIView):
             # Save Payment to DB
             payment = Payment.objects.create(
                 borrowing=borrowing,
-                money_to_pay=borrowing.total_price,
+                money_to_pay=amount,
                 session_id=checkout_session.id,
                 session_url=checkout_session.url,
                 status=Payment.StatusChoices.PENDING,
