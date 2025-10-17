@@ -11,6 +11,7 @@ User = get_user_model()
 
 class BorrowingListSerializer(serializers.ModelSerializer):
     book = serializers.StringRelatedField()
+    payments = serializers.SerializerMethodField()
 
     class Meta:
         model = Borrowing
@@ -20,6 +21,7 @@ class BorrowingListSerializer(serializers.ModelSerializer):
             "borrow_date",
             "expected_return_date",
             "actual_return_date",
+            "payments",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -31,14 +33,48 @@ class BorrowingListSerializer(serializers.ModelSerializer):
                 queryset=User.objects.all()
             )
 
+    def get_payments(self, obj):
+        return [
+            {
+                "payment_id": payment.id,
+                "to be paid": payment.money_to_pay,
+            }
+            for payment in obj.payment_set.all()
+        ]
 
-class BorrowingSerializer(serializers.ModelSerializer):
+
+class BorrowingRetrieveSerializer(BorrowingListSerializer):
+    payments = serializers.SerializerMethodField()
+
     class Meta:
         model = Borrowing
         fields = [
+            "id",
             "book",
+            "borrow_date",
             "expected_return_date",
+            "actual_return_date",
+            "payments",
         ]
+
+    def get_payments(self, obj):
+        return [
+            {
+                "payment_id": payment.id,
+                "status": payment.status,
+                "type": payment.type,
+                "to be paid": payment.money_to_pay,
+            }
+            for payment in obj.payment_set.all()
+        ]
+
+
+class BorrowingSerializer(serializers.ModelSerializer):
+    payments = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Borrowing
+        fields = ["book", "expected_return_date", "payments"]
 
     def validate_book(self, book):
         if book.inventory == 0:
