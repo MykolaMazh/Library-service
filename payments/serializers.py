@@ -4,7 +4,7 @@ from borrowings.models import Borrowing
 from payments.models import Payment
 
 
-class BorrowingListSerializer(serializers.ModelSerializer):
+class BorrowingForPaymentSerializer(serializers.ModelSerializer):
     book = serializers.StringRelatedField()
 
     class Meta:
@@ -24,7 +24,14 @@ class PaymentListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payment
-        fields = ["id", "status", "type", "borrowing", "_book_id"]
+        fields = [
+            "id",
+            "status",
+            "type",
+            "borrowing",
+            "_book_id",
+            "money_to_pay",
+        ]
 
     def get_borrowing(self, instance):
         book = instance.borrowing.book.title
@@ -33,7 +40,7 @@ class PaymentListSerializer(serializers.ModelSerializer):
 
 
 class PaymentRetrieveUpdateSerializer(serializers.ModelSerializer):
-    borrowing = BorrowingListSerializer(read_only=True)
+    borrowing = BorrowingForPaymentSerializer(read_only=True)
 
     class Meta:
         model = Payment
