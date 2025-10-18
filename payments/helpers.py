@@ -42,4 +42,4 @@ def create_stripe_payment(borrowing: Borrowing, amount: Union[int, Decimal]):
     except Exception as e:
         raise RuntimeError(f"Payment creation failed: {e}")
 
-    return (checkout_session.id, checkout_session.url)
+    return checkout_session

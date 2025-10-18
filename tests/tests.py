@@ -1,6 +1,9 @@
 from datetime import date, timedelta
 from unittest.mock import patch
+from typing import Tuple
+from decimal import Decimal
 
+import stripe.checkout
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -11,6 +14,7 @@ from books.models import Book, Author
 from borrowings.models import Borrowing
 from borrowings.tasks import get_overdue_borrowings
 from payments.models import Payment
+from payments.helpers import create_stripe_payment
 
 User = get_user_model()
 expected_return_date = date.today() + timedelta(days=5)
@@ -127,13 +131,14 @@ class UsersApiTests(APITestCase):
         self.assertTrue(user_exists)
 
 
+@patch("borrowings.signals.create_stripe_payment")
 @patch("borrowings.signals.send_telegram_message")
 class BorrowingsApiTests(APITestCase):
 
     def setUp(self):
         self.client = APIClient()
 
-    def test_authenticate_to_borrow(self, mock_send):
+    def test_authenticate_to_borrow(self, mock_send, mock_create_payment):
         user1 = _create_user("user1")
         book = create_book(suffix_inventory=1)
         borrow_data = {
@@ -158,7 +163,7 @@ class BorrowingsApiTests(APITestCase):
             msg="created Borrowing instance's user is active user.",
         )
 
-    def test_reduce_inventory(self, mock_send):
+    def test_reduce_inventory(self, mock_send, mock_create_payment):
         user1 = _create_user("user1")
         book_inventory = 8
         book = create_book(suffix_inventory=book_inventory)
@@ -174,7 +179,7 @@ class BorrowingsApiTests(APITestCase):
         book.refresh_from_db()
         self.assertEqual(book.inventory, book_inventory - 1)
 
-    def test_access_only_own_borrowings(self, mock_send):
+    def test_access_only_own_borrowings(self, mock_send, mock_create_payment):
         book1 = create_book(suffix_inventory=1)
         user1 = _create_user("user1")
         self.client.force_authenticate(user1)
@@ -210,7 +215,7 @@ class BorrowingsApiTests(APITestCase):
             msg="user has access only to own borrowing",
         )
 
-    def test_list_with_query_params(self, mock_send):
+    def test_list_with_query_params(self, mock_send, mock_create_payment):
         for _ in range(10, 20):
             create_book(suffix_inventory=_)
         user1 = _create_user("user1")
@@ -240,7 +245,7 @@ class BorrowingsApiTests(APITestCase):
             msg='is_active displays only not returned books."',
         )
 
-    def test_return_book(self, mock_send):
+    def test_return_book(self, mock_send, mock_create_payment):
         book = create_book(suffix_inventory=10)
         for i in range(3):
             user = _create_user(f"user{i}")
@@ -257,7 +262,7 @@ class BorrowingsApiTests(APITestCase):
         self.client.post(reverse(RETURN_URL, args=[borrowing.id]))
         self.assertEqual(Book.objects.get(id=1).inventory, 8)
 
-    def test_notify_new_borrowing_signal(self, mock_send):
+    def test_notify_new_borrowing_signal(self, mock_send, mock_create_payment):
         user = _create_user("user")
         self.client.force_authenticate(user)
         create_book(suffix_inventory=1)
@@ -277,11 +282,14 @@ class BorrowingsApiTests(APITestCase):
         text_from_message_sent = mock_send.call_args[0][0]
         self.assertEqual(text_from_instance_created, text_from_message_sent)
 
-    @patch("borrowings.signals.create_stripe_payment")
     @patch("borrowings.models.Borrowing.clean", return_value=None)
     @patch("borrowings.tasks.send_telegram_overdue_message")
     def test_notify_daily_overdue_borrowings(
-        self, mock_send_overdue, mock_clean, mock_payment, mock_send
+        self,
+        mock_send_overdue,
+        mock_clean,
+        mock_send,
+        mock_create_payment,
     ):
         user = _create_user("user")
         self.client.force_authenticate(user)
@@ -308,13 +316,36 @@ class PaymentsApiTests(APITestCase):
     def setUp(self):
         self.client = APIClient()
 
-    def test_only_own_payments_visible(self, mock_send):
+    def create_payment(self) -> Tuple[Borrowing, Payment]:
         book = create_book(suffix_inventory=1)
         user1 = _create_user("user1")
         self.client.force_authenticate(user1)
         borrowing = borrow_book(user1, book)
-        payment = Payment.objects.get(borrowing=borrowing)
+        payment = Payment.objects.first()
+        return (borrowing, payment)
 
+    def test_borrowing_creates_payment(self, mock_send):
+        borrowing, payment = self.create_payment()
+        self.assertEqual(payment.borrowing, borrowing)
+
+    @patch("borrowings.signals.create_stripe_payment")
+    def test_borrowing_creates_checkout_session(
+        self, mock_create_payment, mock_send
+    ):
+        borrowing = self.create_payment()[0]
+        checkout_session = create_stripe_payment(borrowing, Decimal("10.50"))
+
+        self.assertIsInstance(checkout_session, stripe.checkout.Session)
+
+        self.assertRegex(checkout_session.id, r"^cs_[a-zA-Z0-9_]+$")
+        self.assertRegex(
+            checkout_session.url, r"^https://checkout\.stripe\.com/.*+"
+        )
+
+    # @patch("borrowings.signals.create_stripe_payment")
+    def test_only_own_payments_visible(self, mock_send):
+        payment = self.create_payment()[1]
+        user1 = User.objects.first()
         staff_user = _create_user("staff_user", is_staff=True)
 
         for user in user1, staff_user:
