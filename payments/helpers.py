@@ -1,11 +1,26 @@
+import os
 from typing import Union
 from decimal import Decimal
 
 import stripe
 from django.db import transaction
+from django.conf import settings
+from dotenv import load_dotenv
 
 from borrowings.models import Borrowing
 from payments.models import Payment
+
+load_dotenv()
+
+domain = (
+    "http://127.0.0.1:8000"
+    if settings.DEBUG
+    else os.getenv("STRIPE_PAYMENT_URL_DOMAIN")
+)
+success_url = domain + "/api/payments/success"
+cancel_url = domain + "/api/payments/cancel"
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 def create_stripe_payment(borrowing: Borrowing, amount: Union[int, Decimal]):
@@ -26,8 +41,8 @@ def create_stripe_payment(borrowing: Borrowing, amount: Union[int, Decimal]):
                         "quantity": 1,
                     }
                 ],
-                success_url="https://football.ua/ukraine/565295-ukrajina-z-drugoji-sprobi-obigrala-azerbajjdzhan.html",
-                cancel_url="https://football.ua/worldcup/562778-ukrajina-postupilas-franciji-na-starti-vidboru-do-chs-2026.html",
+                success_url=success_url + "?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url=cancel_url,
             )
 
             Payment.objects.create(
