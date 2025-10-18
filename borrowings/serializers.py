@@ -70,11 +70,10 @@ class BorrowingRetrieveSerializer(BorrowingListSerializer):
 
 
 class BorrowingSerializer(serializers.ModelSerializer):
-    payments = serializers.SerializerMethodField()
 
     class Meta:
         model = Borrowing
-        fields = ["book", "expected_return_date", "payments"]
+        fields = ["book", "expected_return_date"]
 
     def validate_book(self, book):
         if book.inventory == 0:

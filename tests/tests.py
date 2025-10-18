@@ -56,24 +56,6 @@ def borrow_book(user, book):
     )
 
 
-def _create_payment(
-    borrowing,
-    status="PENDING",
-    type="PAYMENT",
-    session_url="https://trello.com/b/wJIwEqup/my-trello-board",
-    session_id="1",
-    money_to_pay="3.30",
-):
-    return Payment.objects.create(
-        status=status,
-        type=type,
-        session_url=session_url,
-        session_id=session_id,
-        money_to_pay=money_to_pay,
-        borrowing=borrowing,
-    )
-
-
 class BooksApiTests(APITestCase):
 
     def setUp(self):
@@ -295,10 +277,11 @@ class BorrowingsApiTests(APITestCase):
         text_from_message_sent = mock_send.call_args[0][0]
         self.assertEqual(text_from_instance_created, text_from_message_sent)
 
+    @patch("borrowings.signals.create_stripe_payment")
     @patch("borrowings.models.Borrowing.clean", return_value=None)
     @patch("borrowings.tasks.send_telegram_overdue_message")
     def test_notify_daily_overdue_borrowings(
-        self, mock_send_overdue, mock_clean, mock_send
+        self, mock_send_overdue, mock_clean, mock_payment, mock_send
     ):
         user = _create_user("user")
         self.client.force_authenticate(user)
@@ -330,7 +313,7 @@ class PaymentsApiTests(APITestCase):
         user1 = _create_user("user1")
         self.client.force_authenticate(user1)
         borrowing = borrow_book(user1, book)
-        payment = _create_payment(borrowing)
+        payment = Payment.objects.get(borrowing=borrowing)
 
         staff_user = _create_user("staff_user", is_staff=True)
 

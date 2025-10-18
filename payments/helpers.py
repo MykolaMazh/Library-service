@@ -38,3 +38,5 @@ def create_stripe_payment(borrowing: Borrowing, amount):
 
     except Exception as e:
         raise RuntimeError(f"Payment creation failed: {e}")
+
+    return (checkout_session.id, checkout_session.url)
