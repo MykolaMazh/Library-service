@@ -1,3 +1,6 @@
+from typing import Union
+from decimal import Decimal
+
 import stripe
 from django.db import transaction
 
@@ -5,7 +8,7 @@ from borrowings.models import Borrowing
 from payments.models import Payment
 
 
-def create_stripe_payment(borrowing: Borrowing, amount):
+def create_stripe_payment(borrowing: Borrowing, amount: Union[int, Decimal]):
     try:
         with transaction.atomic():
             checkout_session = stripe.checkout.Session.create(
@@ -18,7 +21,7 @@ def create_stripe_payment(borrowing: Borrowing, amount):
                             "product_data": {
                                 "name": f"Borrowing #{borrowing.id}"
                             },
-                            "unit_amount": amount * 100,
+                            "unit_amount": int(amount * 100),
                         },
                         "quantity": 1,
                     }
