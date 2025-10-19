@@ -97,8 +97,13 @@ class BorrowingViewSet(
 
     @extend_schema(
         summary="Borrow a book.",
-        description="Create new Borrowing instance. Authentication required. After Borrowing instance has been created"
-        " notification is sent to Telegram chat.",
+        description="""Create new Borrowing instance. Authentication required. After Borrowing instance has been created
+        notification is sent to Telegram chat. New Borrowing creates Stripe Checkout Session and new Payments instance
+        with checkout_session_id and checkout_session_url. REQUIRES in .env file next variables:
+                
+        STRIPE_SECRET_KEY=your_stripe_secret_key
+        STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+        STRIPE_PAYMENT_URL_DOMAIN=your_production_domain_with_domain with protocol""",
         examples=[
             OpenApiExample(
                 name="Example",
