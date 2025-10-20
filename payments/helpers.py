@@ -5,6 +5,7 @@ from decimal import Decimal
 import stripe
 from django.db import transaction
 from django.conf import settings
+from django.urls import reverse
 from dotenv import load_dotenv
 
 from borrowings.models import Borrowing
@@ -17,8 +18,9 @@ domain = (
     if settings.DEBUG
     else os.getenv("STRIPE_PAYMENT_URL_DOMAIN")
 )
-success_url = domain + "/api/payments/success"
-cancel_url = domain + "/api/payments/cancel"
+base_url = domain + reverse("payments:payment-list")
+success_url = base_url + "success/"
+cancel_url = base_url + "cancel/"
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
