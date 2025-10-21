@@ -1,7 +1,11 @@
 from django.urls import path
 
-from payments.views import PaymentListApiView, PaymentRetrieveUpdateApiView
-from payments.views import CreateCheckoutSessionView
+from payments.views import (
+    PaymentListApiView,
+    PaymentRetrieveUpdateApiView,
+    PaymentCancelRedirectView,
+)
+from payments.views import PaymentSuccessRedirectView
 
 urlpatterns = [
     path("", PaymentListApiView.as_view(), name="payment-list"),
@@ -11,9 +15,14 @@ urlpatterns = [
         name="payment-detail",
     ),
     path(
-        "create-payment/<int:borrowing_id>/",
-        CreateCheckoutSessionView.as_view(),
-        name="create-payment-session",
+        "success/",
+        PaymentSuccessRedirectView.as_view(),
+        name="payment-completed",
+    ),
+    path(
+        "cancel/",
+        PaymentCancelRedirectView.as_view(),
+        name="payment-cancelled",
     ),
 ]
 

@@ -15,6 +15,9 @@ from payments.serializers import (
 from payments.permissions import IsBorrower
 
 
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
 class PaymentListApiView(generics.ListAPIView):
     queryset = Payment.objects.all()
     serializer_class = PaymentListSerializer
@@ -40,51 +43,35 @@ class PaymentRetrieveUpdateApiView(generics.RetrieveUpdateAPIView):
         return Payment.objects.filter(borrowing__user=self.request.user)
 
 
-stripe.api_key = settings.STRIPE_SECRET_KEY
-
-
-class CreateCheckoutSessionView(APIView):
-    def post(self, request, borrowing_id):
-
-        borrowing = get_object_or_404(Borrowing, id=borrowing_id)
-        amount = borrowing.borrow_days * 100  # amount in cents
-
-        try:
-            checkout_session = stripe.checkout.Session.create(
-                payment_method_types=["card"],
-                mode="payment",
-                line_items=[
-                    {
-                        "price_data": {
-                            "currency": "usd",
-                            "product_data": {
-                                "name": f"Borrowing #{borrowing.id}"
-                            },
-                            "unit_amount": amount,
-                        },
-                        "quantity": 1,
-                    }
-                ],
-                success_url="https://yourfrontend.com/success?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url="https://yourfrontend.com/cancel",
-            )
-
-            # Save Payment to DB
-            payment = Payment.objects.create(
-                borrowing=borrowing,
-                money_to_pay=amount,
-                session_id=checkout_session.id,
-                session_url=checkout_session.url,
-                status=Payment.StatusChoices.PENDING,
-                type=Payment.TypeChoices.PAYMENT,
-            )
-
+class PaymentSuccessRedirectView(APIView):
+    def get(self, request):
+        session_id = request.query_params.get("session_id")
+        if not session_id:
             return Response(
-                {"checkout_url": payment.session_url},
-                status=status.HTTP_201_CREATED,
+                {"error": "Missing session_id"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
+        try:
+            session = stripe.checkout.Session.retrieve(session_id)
 
-        except Exception as e:
+            if session.payment_status == "paid":
+                payment = Payment.objects.filter(session_id=session_id).first()
+                if payment:
+                    payment.status = Payment.StatusChoices.PAID
+                    payment.save()
+                return Response(
+                    {"message": "The payment has been successfully completed!"}
+                )
+            else:
+                return Response(
+                    {"message": "Your payment has not been completed yet."}
+                )
+        except stripe.StripeError as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class PaymentCancelRedirectView(APIView):
+    def get(self, request):
+        return Response({"message": "The payment has been cancelled."})
