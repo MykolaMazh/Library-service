@@ -74,4 +74,9 @@ class PaymentSuccessRedirectView(APIView):
 
 class PaymentCancelRedirectView(APIView):
     def get(self, request):
-        return Response({"message": "The payment has been cancelled."})
+        return Response(
+            {
+                "message": "Your payment was not completed (or interrupted). You still have 24 hours to complete"
+                " your payment before the session expires."
+            }
+        )
