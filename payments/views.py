@@ -12,7 +12,6 @@ from payments.serializers import (
     PaymentListSerializer,
     PaymentRetrieveUpdateSerializer,
 )
-from payments.permissions import IsBorrower
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -44,6 +43,9 @@ class PaymentRetrieveUpdateApiView(generics.RetrieveUpdateAPIView):
 
 
 class PaymentSuccessRedirectView(APIView):
+    """Url Stripe automatically redirect to after a payment is completed successfully. Marks
+    payment_status as 'paid'."""
+
     def get(self, request):
         session_id = request.query_params.get("session_id")
         if not session_id:
@@ -73,6 +75,8 @@ class PaymentSuccessRedirectView(APIView):
 
 
 class PaymentCancelRedirectView(APIView):
+    """Url the user is redirected to if cancelled the payment."""
+
     def get(self, request):
         return Response(
             {
