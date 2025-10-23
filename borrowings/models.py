@@ -1,6 +1,9 @@
+import datetime
+
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from books.models import Book
 
@@ -29,9 +32,13 @@ class Borrowing(models.Model):
 
     @property
     def fine_days(self):
-        if self.actual_return_date:
-            if self.actual_return_date > self.expected_return_date:
-                return (
-                    self.actual_return_date - self.expected_return_date
-                ).days
+        now = timezone.now()
+        if now.date() > self.expected_return_date:
+            if self.actual_return_date:
+                if self.actual_return_date > self.expected_return_date:
+                    return (
+                        self.actual_return_date - self.expected_return_date
+                    ).days
+            else:
+                return (self.expected_return_date - now.date()).days
         return 0
