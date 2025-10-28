@@ -26,4 +26,4 @@ def get_overdue_borrowings():
     else:
         send_telegram_message("No borrowings overdue today!")
 
-    return queryset
+    return "messages have been sent"
