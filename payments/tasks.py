@@ -1,7 +1,6 @@
 from datetime import date
 
 import stripe
-from django.db.models import Q
 from django.utils import timezone
 from django.conf import settings
 from celery import shared_task

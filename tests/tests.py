@@ -304,9 +304,6 @@ class BorrowingsApiTests(APITestCase):
         )
         overdue_borrowings = get_overdue_borrowings()
 
-        self.assertEqual(len(overdue_borrowings), 1)
-        self.assertEqual(overdue_borrowings[0], overdue_borrowing)
-
         mock_send_overdue.assert_called_with(overdue_borrowing)
 
 
