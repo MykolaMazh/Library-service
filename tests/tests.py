@@ -282,6 +282,33 @@ class BorrowingsApiTests(APITestCase):
         text_from_message_sent = mock_send.call_args[0][0]
         self.assertEqual(text_from_instance_created, text_from_message_sent)
 
+    def test_only_one_unpaid_borrowing(self, mock_send, mock_create_payment):
+        user = _create_user("user")
+        self.client.force_authenticate(user)
+        book = create_book(suffix_inventory=1)
+        borrowing = borrow_book(user, Book.objects.last())
+        Payment.objects.create(
+            borrowing=borrowing,
+            money_to_pay=Decimal("10.20"),
+            session_id="test_session_id_12854",
+            session_url="testt_session_url_455465",
+            status="pending",
+            type=Payment.TypeChoices.PAYMENT,
+        )
+
+        self.assertEqual(Payment.objects.count(), 1)
+
+        borrow_data = {
+            "book": book.id,
+            "expected_return_date": expected_return_date,
+        }
+        response = self.client.post(
+            reverse(BORROWING_LIST),
+            data=borrow_data,
+        )
+        self.assertEqual(Payment.objects.count(), 1)
+        self.assertEqual(response.status_code, 400)
+
     @patch("borrowings.models.Borrowing.clean", return_value=None)
     @patch("borrowings.tasks.send_telegram_overdue_message")
     def test_notify_daily_overdue_borrowings(

@@ -6,6 +6,7 @@ from django.db import transaction
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 from drf_spectacular.utils import (
     extend_schema,
     OpenApiExample,
@@ -21,6 +22,7 @@ from borrowings.serializers import (
     BorrowingListSerializer,
     BorrowingRetrieveSerializer,
 )
+from payments.models import Payment
 
 null = None
 
@@ -36,6 +38,17 @@ class BorrowingViewSet(
     permission_classes = [IsBorrower]
 
     def perform_create(self, serializer):
+        pending_payment = Payment.objects.select_related("borrowing").filter(
+            borrowing__user=self.request.user,
+            status=Payment.StatusChoices.PENDING,
+        )
+        if pending_payment.exists():  # efficient check
+            raise ValidationError(
+                {
+                    "message": "No borrowing can be created if the user has unpaid borrowings."
+                }
+            )
+
         borrowing = serializer.save(user=self.request.user)
         borrowing.book.inventory -= 1
         borrowing.book.save()
