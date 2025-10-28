@@ -9,12 +9,17 @@ from notifications.telegram_helper import (
 )
 
 
-@shared_task
-def get_overdue_borrowings():
+def overdue_borrowings():
     today = date.today()
     queryset = Borrowing.objects.filter(
         Q(expected_return_date__lte=today) & Q(actual_return_date__isnull=True)
     )
+    return queryset
+
+
+@shared_task
+def get_overdue_borrowings():
+    queryset = overdue_borrowings()
     if queryset:
         for borrowing in queryset:
             send_telegram_overdue_message(borrowing)
