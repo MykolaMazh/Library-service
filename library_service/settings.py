@@ -172,7 +172,7 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_BEAT_SCHEDULE = {
     "daily_overdue_borrowing_review": {
         "task": "borrowings.tasks.get_overdue_borrowings",
-        "schedule": crontab(hour=18, minute=0),
+        "schedule": crontab(hour=18, minute=30),
     },
     "update_expired_payment_session": {
         "task": "payments.tasks.check_payment_session",
@@ -180,7 +180,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     "create_or_update_fine_payment": {
         "task": "payments.tasks.create_fine_payment",
-        "schedule": crontab(),
+        "schedule": crontab(hour=0, minute=5),
     },
 }
 

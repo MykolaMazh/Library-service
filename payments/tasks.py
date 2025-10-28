@@ -29,7 +29,7 @@ def check_payment_session():
 
 
 @shared_task
-def create_fine_payment(create_fine):
+def create_fine_payment():
     queryset = overdue_borrowings()
     payments_created = 0
     payments_updated = 0
