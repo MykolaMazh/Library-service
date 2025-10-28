@@ -24,3 +24,33 @@ def check_payment_session():
                 payment.status = Payment.StatusChoices.EXPIRED
                 payment.save()
     return queryset
+
+
+@shared_task
+def create_fine_payment(create_fine):
+    queryset = overdue_borrowings()
+    if queryset:
+        for borrowing in queryset:
+            fine_amount = borrowing.fine_days * settings.DAILY_FINE_FEE
+            fine_payment = borrowing.payment_set.filter(
+                type=Payment.TypeChoices.FINE,
+                status=Payment.StatusChoices.PENDING,
+            ).first()
+            if fine_payment:
+                session = stripe.checkout.Session.retrieve(
+                    fine_payment.session_id
+                )
+                if session.expires_at < timezone.now().timestamp():
+                    fine_payment.delete()
+                    create_stripe_payment(
+                        borrowing, fine_amount, Payment.TypeChoices.FINE
+                    )
+                else:
+                    fine_payment.money_to_pay = fine_amount
+                    fine_payment.save()
+            else:
+                create_stripe_payment(
+                    borrowing, fine_amount, Payment.TypeChoices.FINE
+                )
+
+    return queryset
