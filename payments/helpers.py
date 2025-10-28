@@ -25,7 +25,11 @@ cancel_url = base_url + "cancel/"
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
-def create_stripe_payment(borrowing: Borrowing, amount: Union[int, Decimal]):
+def create_stripe_payment(
+    borrowing: Borrowing,
+    amount: Union[int, Decimal],
+    type: str = Payment.TypeChoices.PAYMENT,
+):
     try:
         with transaction.atomic():
             checkout_session = stripe.checkout.Session.create(
@@ -53,7 +57,7 @@ def create_stripe_payment(borrowing: Borrowing, amount: Union[int, Decimal]):
                 session_id=checkout_session.id,
                 session_url=checkout_session.url,
                 status=Payment.StatusChoices.PENDING,
-                type=Payment.TypeChoices.PAYMENT,
+                type=type,
             )
 
     except Exception as e:
