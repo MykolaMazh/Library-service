@@ -173,7 +173,15 @@ CELERY_BEAT_SCHEDULE = {
     "daily_overdue_borrowing_review": {
         "task": "borrowings.tasks.get_overdue_borrowings",
         "schedule": crontab(hour=18, minute=0),
-    }
+    },
+    "update_expired_payment_session": {
+        "task": "payments.tasks.check_payment_session",
+        "schedule": crontab(),
+    },
+    "create_or_update_fine_payment": {
+        "task": "payments.tasks.create_fine_payment",
+        "schedule": crontab(),
+    },
 }
 
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
