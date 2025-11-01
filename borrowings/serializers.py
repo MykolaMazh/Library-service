@@ -38,8 +38,10 @@ class BorrowingListSerializer(serializers.ModelSerializer):
             {
                 "payment_id": payment.id,
                 "to be paid": payment.money_to_pay,
+                "payment_type": payment.type,
+                "payment_status": payment.status,
             }
-            for payment in obj.payment_set.all()
+            for payment in obj.payment_set.exclude(status="expired")
         ]
 
 

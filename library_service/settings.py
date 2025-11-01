@@ -170,7 +170,7 @@ CELERY_RESULT_SERIALIZER = "json"
 
 
 CELERY_BEAT_SCHEDULE = {
-    "daily_overdue_borrowing_review": {
+    "daily_overdue_borrowing_notification": {
         "task": "borrowings.tasks.get_overdue_borrowings",
         "schedule": crontab(hour=18, minute=30),
     },
