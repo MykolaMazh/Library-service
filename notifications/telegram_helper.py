@@ -1,8 +1,10 @@
 import os
 import requests
+
 from dotenv import load_dotenv
 
 from borrowings.models import Borrowing
+from payments.models import Payment
 
 load_dotenv()
 
@@ -13,17 +15,20 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
 
-def send_telegram_message(text: str):
-    payload = {"chat_id": CHAT_ID, "text": text, "parse_mode": "Markdown"}
-
+def send_message(message: str):
+    payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "Markdown"}
     response = requests.post(url, data=payload)
     if not response.ok:
         raise Exception(f"Exception: {response.text}")
 
 
+def send_telegram_message(message: str):
+    send_message(message)
+
+
 def send_telegram_overdue_message(borrowing: Borrowing):
 
-    text = (
+    message = (
         f"📚📚📚 *OVERDUE BORROWING ALERT!* 📚📚📚\n\n"
         f"📖 *Borrowing ID:* {borrowing.id}\n"
         f"👤 *User:* {borrowing.user}\n"
@@ -32,9 +37,9 @@ def send_telegram_overdue_message(borrowing: Borrowing):
         f"⏰ *Expected return date:* {borrowing.expected_return_date}\n\n"
         f"📚📚📚 Please remind the user to return their book 📚📚📚"
     )
+    send_message(message)
 
-    payload = {"chat_id": CHAT_ID, "text": text, "parse_mode": "Markdown"}
 
-    response = requests.post(url, data=payload)
-    if not response.ok:
-        raise Exception(f"Exception: {response.text}")
+def send_successfull_payment_notification(payment: Payment):
+    message = f"✅ Payment #{payment.id} completed.\nAmount: {payment.amount}"
+    send_message(message)
