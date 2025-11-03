@@ -1,12 +1,11 @@
 from django.conf import settings
-from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 import stripe
 
-from borrowings.models import Borrowing
+from notifications.telegram_helper import send_successfull_payment_notification
 from payments.models import Payment
 from payments.serializers import (
     PaymentListSerializer,
@@ -59,8 +58,11 @@ class PaymentSuccessRedirectView(APIView):
             if session.payment_status == "paid":
                 payment = Payment.objects.filter(session_id=session_id).first()
                 if payment:
+                    old_status = payment.status
                     payment.status = Payment.StatusChoices.PAID
                     payment.save()
+                    if old_status != payment.status:
+                        send_successfull_payment_notification(payment)
                 return Response(
                     {"message": "The payment has been successfully completed!"}
                 )
