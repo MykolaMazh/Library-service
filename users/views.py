@@ -30,7 +30,8 @@ class RetrieveUpdateUserView(generics.RetrieveUpdateAPIView):
 
 @extend_schema(
     summary="Obtain JWT token",
-    description="Obtain access and refresh JWT tokens using email and password.",
+    description="Obtain access and refresh JWT tokens using "
+    "email and password.",
 )
 class CustomTokenObtainPairView(TokenObtainPairView):
     pass

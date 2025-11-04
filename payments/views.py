@@ -42,7 +42,8 @@ class PaymentRetrieveUpdateApiView(generics.RetrieveUpdateAPIView):
 
 
 class PaymentSuccessRedirectView(APIView):
-    """Url Stripe automatically redirect to after a payment is completed successfully. Marks
+    """Url Stripe automatically redirect to after a payment is
+    completed successfully. Marks
     payment_status as 'paid'."""
 
     def get(self, request):
@@ -82,7 +83,8 @@ class PaymentCancelRedirectView(APIView):
     def get(self, request):
         return Response(
             {
-                "message": "Your payment was not completed (or interrupted). You still have 24 hours to complete"
-                " your payment before the session expires."
+                "message": "Your payment was not completed (or interrupted)."
+                " You still have 24 hours to complete your payment before "
+                "the session expires."
             }
         )

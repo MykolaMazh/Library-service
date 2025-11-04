@@ -12,7 +12,8 @@ from books.serializers import (
 
 @extend_schema(
     summary="Books of library",
-    description="only admin users can edit. For users only get-requests available",
+    description="only admin users can edit. "
+    "For users only get-requests available",
 )
 class BookViewSet(ModelViewSet):
     queryset = Book.objects.filter(inventory__gt=0)
@@ -26,7 +27,8 @@ class BookViewSet(ModelViewSet):
 
 @extend_schema(
     summary="Authors of Books in library",
-    description="only admin users can edit. For users only get-requests available",
+    description="only admin users can edit."
+    " For users only get-requests available",
 )
 class AuthorViewSet(ModelViewSet):
     serializer_class = AuthorSerializer

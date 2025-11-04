@@ -45,7 +45,8 @@ class BorrowingViewSet(
         if pending_payment.exists():  # efficient check
             raise ValidationError(
                 {
-                    "message": "No borrowing can be created if the user has unpaid borrowings."
+                    "message": "No borrowing can be created if the user "
+                    "has unpaid borrowings."
                 }
             )
 
@@ -92,7 +93,8 @@ class BorrowingViewSet(
             if borrowing.actual_return_date:
                 return Response(
                     {
-                        "status": f'"{book}" has already been returned on {borrowing.actual_return_date}',
+                        "status": f'"{book}" has already been returned on '
+                        f"{borrowing.actual_return_date}",
                     }
                 )
         return_date = datetime.date.today()
@@ -104,19 +106,23 @@ class BorrowingViewSet(
 
         return Response(
             {
-                "status": f'Thank You. "{book}" has been returned on {return_date}.',
+                "status": f'Thank You. "{book}" has been returned '
+                f"on {return_date}.",
             }
         )
 
     @extend_schema(
         summary="Borrow a book.",
-        description="""Create new Borrowing instance. Authentication required. After Borrowing instance has been created
-        notification is sent to Telegram chat. New Borrowing creates Stripe Checkout Session and new Payments instance
-        with checkout_session_id and checkout_session_url. REQUIRES in .env file next variables:
-                
+        description="""Create new Borrowing instance. Authentication
+        required. After Borrowing instance has been created notification is
+        sent to Telegram chat. New Borrowing creates Stripe Checkout
+        Session and new Payments instance with checkout_session_id and
+        checkout_session_url. REQUIRES in .env file next variables:
+
         STRIPE_SECRET_KEY=your_stripe_secret_key
         STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-        STRIPE_PAYMENT_URL_DOMAIN=your_production_domain_with_domain with protocol""",
+        STRIPE_PAYMENT_URL_DOMAIN=your_production_domain
+                            with protocol""",
         examples=[
             OpenApiExample(
                 name="Example",
@@ -130,8 +136,9 @@ class BorrowingViewSet(
 
     @extend_schema(
         summary="Get list of borrowings",
-        description="User can get own borrowings list and filter by ''is_active''(is a book returned or not)."
-        "Admin user can get all users' borrowings and filter by ''user_id''",
+        description="User can get own borrowings list and filter by "
+        "''is_active''(is a book returned or not)."
+        " Admin user can get all users' borrowings and filter by ''user_id''",
         # Define a path parameter named "id"
         parameters=[
             OpenApiParameter(
@@ -142,7 +149,9 @@ class BorrowingViewSet(
             ),
             OpenApiParameter(
                 name="is_active",
-                description="Parameter to get only active borrowings(borrowings of books that haven’t been returned yet). Should be ANY STRING",
+                description="Parameter to get only active "
+                "borrowings(borrowings of books that haven’t been "
+                "returned yet). Should be ANY STRING",
                 type=OpenApiTypes.STR,
                 location=OpenApiParameter.QUERY,
             ),
@@ -157,14 +166,16 @@ class BorrowingViewSet(
                         value=[
                             {
                                 "id": 18,
-                                "book": "Call of the Camino22 by Suzanne Redfearn",
+                                "book": "Call of the Camino22 by Suzanne "
+                                "Redfearn",
                                 "borrow_date": "2025-10-05",
                                 "expected_return_date": "2025-10-09",
                                 "actual_return_date": null,
                             },
                             {
                                 "id": 19,
-                                "book": "Call of the Camino23 by Suzanne Redfearn",
+                                "book": "Call of the Camino23 "
+                                "by Suzanne Redfearn",
                                 "borrow_date": "2025-10-05",
                                 "expected_return_date": "2025-10-09",
                                 "actual_return_date": "2025-10-05",
@@ -176,7 +187,8 @@ class BorrowingViewSet(
                         value=[
                             {
                                 "id": 18,
-                                "book": "Call of the Camino22 by Suzanne Redfearn",
+                                "book": "Call of the Camino22 by Suzanne"
+                                " Redfearn",
                                 "borrow_date": "2025-10-05",
                                 "expected_return_date": "2025-10-09",
                                 "actual_return_date": null,
@@ -185,7 +197,8 @@ class BorrowingViewSet(
                             },
                             {
                                 "id": 19,
-                                "book": "Call of the Camino23 by Suzanne Redfearn",
+                                "book": "Call of the Camino23 by Suzanne"
+                                " Redfearn",
                                 "borrow_date": "2025-10-05",
                                 "expected_return_date": "2025-10-09",
                                 "actual_return_date": "2025-10-05",
