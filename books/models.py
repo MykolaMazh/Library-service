@@ -28,7 +28,7 @@ class Book(models.Model):
         validators=[MinValueValidator(0)]
     )
     daily_fee = models.DecimalField(
-        max_digits=4, decimal_places=2, default=Decimal("0.00")
+        max_digits=4, decimal_places=2, default=Decimal("1.50")
     )
 
     def __str__(self):
