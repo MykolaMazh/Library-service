@@ -34,7 +34,11 @@ def create_fine_payment():
     payments_updated = 0
     if queryset:
         for borrowing in queryset:
-            fine_amount = borrowing.fine_days * settings.DAILY_FINE_FEE
+            fine_amount = (
+                borrowing.fine_days
+                * borrowing.book.daily_fee
+                * settings.base.DAILY_FINE_MULTIPLIER
+            )
             fine_payment = borrowing.payment_set.filter(
                 type=Payment.TypeChoices.FINE,
                 status=Payment.StatusChoices.PENDING,
