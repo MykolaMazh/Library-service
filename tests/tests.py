@@ -260,7 +260,7 @@ class BorrowingsApiTests(APITestCase):
 
         borrowing = Borrowing.objects.get(user=user)
         self.client.post(reverse(RETURN_URL, args=[borrowing.id]))
-        self.assertEqual(Book.objects.get(id=1).inventory, 8)
+        self.assertEqual(Book.objects.get(id=book.id).inventory, 8)
 
     def test_notify_new_borrowing_signal(self, mock_send, mock_create_payment):
         user = _create_user("user")
