@@ -8,7 +8,9 @@ A Django REST Framework API for borrowing books and pay for it using Stripe paym
 
 -  Registration
 -  JWT authentication
--  Users can borrow books, pay for it and return 
+-  Users can borrow books, pay for it and return
+-  Ones borrowings or payments has been created a notification is sent to telegram chat so if the payment has not been 
+   paid
 -  Interactive API documentation with Swagger
 -  Admin dashboard for data management
 
@@ -22,6 +24,35 @@ A Django REST Framework API for borrowing books and pay for it using Stripe paym
 - !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1Render.com for deployment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ---
+
+***Create a Telegram bot***
+
+1. Open Telegram and message **@BotFather**.
+  
+2. Use `/newbot` → follow prompts → you’ll receive a **bot token** like:
+  
+  `123456789:ABCdefGHIjklMNOpqrSTUvwxYZ`
+
+  ---
+
+***Create a Telegram chat***
+
+- Create a private group or channel for notifications.
+- Add your bot to that chat and **promote it as an admin** (so it can send messages).
+- Use this method to get the **chat ID**:
+  
+  - Visit:
+    
+    `https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/getUpdates`
+    
+  - Send a test message in the chat.
+    
+  - The response JSON will contain a `"chat":{"id":<TELEGRAM_CHAT_ID>}` value.
+  
+From [Stripe](https://dashboard.stripe.com/login) get your STRIPE_SECRET_KEY and
+STRIPE_PUBLISHABLE_KEY.
+
+These variables should be in `.env` file.
 
 ## ⚙️ Local Setup
 
@@ -45,7 +76,7 @@ source venv/bin/activate # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. Create a `.env` file
+### 4. Create a `.env` file from `sample.env`
 
 settings.py is split into prod.py and dev.py so
 
@@ -64,13 +95,13 @@ DJANGO_SETTINGS_MODULE=library_service.settings.prod
 ### 5. Run migrations
 
 ```bash
-python manage.py migrate  
+python manage.py migrate
 ```
 
 ### 6. Create a superuser (optional)
 
 ```bash
-python manage.py createsuperuser  
+python manage.py createsuperuser
 ```
 
 ### 7. Run the server
