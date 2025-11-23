@@ -16,15 +16,6 @@ A Django REST Framework API for borrowing books and pay for it using Stripe paym
 
 ---
 
-## 🚀 Tech Stack
-
-- Python 3.12+
-- PostgreSQL
-- drf-spectacular for API docs
-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1Render.com for deployment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
----
-
 ***Create a Telegram bot***
 
 1. Open Telegram and message **@BotFather**.
@@ -104,7 +95,13 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-### 7. Run the server
+### 7. Run selery along with celery-beat
+
+```bash
+celery -A library_service worker -B -l info
+```
+
+### 8. Run the server
 
 ```bash
 python manage.py runserver
@@ -182,5 +179,3 @@ tests
 ```bash
 docker compose exec library-service python manage.py test
 ```
-
-### App in production on `render.com` connected to PostgreSQL - `https://social-media-api-rx5z.onrender.com`
