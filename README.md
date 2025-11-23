@@ -109,7 +109,8 @@ python manage.py runserver
 
 ## 🔑 Authentication
 
-This project uses **JWT authentication** via `/api/users/token/` after registration on `/api/users/register/`.
+This project uses **JWT authentication** via `/api/users/token/` after registration on `/api/users/register/`.   
+`Authorithation` header is replaced with `Authiorize`.
 
 ## 📄 API Documentation
 

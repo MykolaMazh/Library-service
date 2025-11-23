@@ -121,8 +121,7 @@ class BorrowingViewSet(
 
         STRIPE_SECRET_KEY=your_stripe_secret_key
         STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-        STRIPE_PAYMENT_URL_DOMAIN=your_production_domain
-                            with protocol""",
+        """,
         examples=[
             OpenApiExample(
                 name="Example",

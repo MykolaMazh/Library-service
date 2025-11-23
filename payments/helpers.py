@@ -16,7 +16,7 @@ load_dotenv()
 domain = (
     "http://127.0.0.1:8000"
     if settings.DEBUG
-    else os.getenv("STRIPE_PAYMENT_URL_DOMAIN")
+    else "https://" + os.getenv("PRODUCTION_DOMAIN")
 )
 base_url = domain + reverse("payments:payment-list")
 success_url = base_url + "success/"
