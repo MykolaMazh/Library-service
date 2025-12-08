@@ -11,6 +11,7 @@ from payments.serializers import (
     PaymentListSerializer,
     PaymentRetrieveUpdateSerializer,
 )
+from payments.permissions import IsPaymentOwner
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -33,7 +34,7 @@ class PaymentListApiView(generics.ListAPIView):
 class PaymentRetrieveUpdateApiView(generics.RetrieveUpdateAPIView):
     queryset = Payment.objects.all()
     serializer_class = PaymentRetrieveUpdateSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsPaymentOwner]
 
     def get_queryset(self):
         if self.request.user.is_staff:
