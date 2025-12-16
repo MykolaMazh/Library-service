@@ -37,7 +37,7 @@ def create_fine_payment():
             fine_amount = (
                 borrowing.fine_days
                 * borrowing.book.daily_fee
-                * settings.base.DAILY_FINE_MULTIPLIER
+                * settings.DAILY_FINE_MULTIPLIER
             )
             fine_payment = borrowing.payment_set.filter(
                 type=Payment.TypeChoices.FINE,
