@@ -1,8 +1,8 @@
-import datetime
 from typing import List
 
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -82,7 +82,7 @@ class BorrowingViewSet(
 
     @extend_schema(
         summary="Return a borrowed book.",
-        description="Return borrowed book with provided id.",
+        description="Return borrowed book with provided id. The return is being processed on the current date.",
         request=None,
     )
     @action(detail=True, methods=["post"], url_path="return")
@@ -97,7 +97,7 @@ class BorrowingViewSet(
                         f"{borrowing.actual_return_date}",
                     }
                 )
-        return_date = datetime.date.today()
+        return_date = timezone.localdate()
         with transaction.atomic():
             borrowing.actual_return_date = return_date
             borrowing.save()
@@ -142,7 +142,8 @@ class BorrowingViewSet(
         parameters=[
             OpenApiParameter(
                 name="user_id",
-                description="The user’s ID used to retrieve their borrowings.",
+                description="The user’s ID used to retrieve their borrowings. Parameter for admin users, ordinary users "
+                "always get only their own borrowings",
                 type=OpenApiTypes.INT,
                 location=OpenApiParameter.QUERY,
             ),
