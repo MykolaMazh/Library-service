@@ -32,13 +32,13 @@ class Borrowing(models.Model):
 
     @property
     def fine_days(self):
-        now = timezone.now()
-        if now.date() > self.expected_return_date:
+        now = timezone.localdate()
+        if now > self.expected_return_date:
             if self.actual_return_date:
                 if self.actual_return_date > self.expected_return_date:
                     return (
                         self.actual_return_date - self.expected_return_date
                     ).days
             else:
-                return (self.expected_return_date - now.date()).days
+                return (now - self.expected_return_date).days
         return 0
