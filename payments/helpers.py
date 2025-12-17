@@ -40,7 +40,8 @@ def create_stripe_payment(
                         "price_data": {
                             "currency": "usd",
                             "product_data": {
-                                "name": f'Borrowing "{borrowing.book.title}" by {borrowing.book.author}'
+                                "name": f'Borrowing "{borrowing.book.title}"'
+                                f" by {borrowing.book.author}"
                             },
                             "unit_amount": int(amount * 100),
                         },

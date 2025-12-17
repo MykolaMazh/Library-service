@@ -31,12 +31,16 @@ class BookViewSet(ModelViewSet):
         examples=[
             OpenApiExample(
                 name="Request example",
-                description='"Cover" is choice from "HARD"/"SOFT" by default is set to "HARD"',
+                description='"Cover" is choice from "HARD"/"SOFT" '
+                'by default is set to "HARD"',
                 value={
                     "author": 4,
                     "title": "Into the Water",
                     "cover": "SOFT",
-                    "synopsis": '"Into The Water" by Paula Hawkins is an addictive psychological suspense novel that delves into the slipperiness of truth and a family drowning in secrets.\n\nSet in a small riverside town, Hawkins unfurls a gripping, twisting, and layered story that will keep you on the edge of your seat. With her powerful understanding of human instincts and the damage they can inflict, Hawkins once again delivers a masterful narrative that explores the complexities of truth and deception. Dive into this riveting tale and uncover the secrets lurking beneath the surface.',
+                    "synopsis": '"Into The Water" by Paula Hawkins is an'
+                    " addictive psychological suspense novel that delves"
+                    " into the slipperiness of truth"
+                    " and a family drowning in secrets.\n\n",
                     "inventory": 2,
                     "daily_fee": "1.35",
                 },

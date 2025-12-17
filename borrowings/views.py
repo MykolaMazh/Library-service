@@ -82,7 +82,8 @@ class BorrowingViewSet(
 
     @extend_schema(
         summary="Return a borrowed book.",
-        description="Return borrowed book with provided id. The return is being processed on the current date.",
+        description="Return borrowed book with provided id. The return is "
+        "being processed on the current date.",
         request=None,
     )
     @action(detail=True, methods=["post"], url_path="return")
@@ -142,7 +143,8 @@ class BorrowingViewSet(
         parameters=[
             OpenApiParameter(
                 name="user_id",
-                description="The user’s ID used to retrieve their borrowings. Parameter for admin users, ordinary users "
+                description="The user’s ID used to retrieve their borrowings."
+                " Parameter for admin users, ordinary users "
                 "always get only their own borrowings",
                 type=OpenApiTypes.INT,
                 location=OpenApiParameter.QUERY,
