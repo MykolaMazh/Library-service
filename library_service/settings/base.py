@@ -163,7 +163,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     "create_or_update_fine_payment": {
         "task": "payments.tasks.create_fine_payment",
-        "schedule": crontab(hour=0, minute=5),
+        "schedule": crontab(hour=7),
     },
 }
 
