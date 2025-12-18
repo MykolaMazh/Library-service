@@ -127,7 +127,7 @@ create `docker-compose.yml`
 ```yaml
 services:
   library-service:
-    image: nick098/library-service:latest
+    image: nick098/dev_lib-library-service:latest
     ports:
       - "8080:8080"
     env_file:
@@ -145,7 +145,7 @@ services:
       - my_db:/var/lib/postgresql/data
 
   celery-worker:
-    image: nick098/celery-worker:latest
+    image: nick098/dev_lib-celery-worker:latest
     env_file:
       - .env
     depends_on:
@@ -154,7 +154,7 @@ services:
       - library-service
 
   celery-beat:
-    image: nick098/celery-beat:latest
+    image: nick098/dev_lib-celery-beat:latest
     env_file:
       - .env
     depends_on:
