@@ -45,67 +45,6 @@ STRIPE_PUBLISHABLE_KEY.
 
 These variables should be in `.env` file.
 
-## ⚙️ Local Setup
-
-### 1. Clone the project
-
-```bash
-git clone https://github.com/MykolaMazh/Library-service.git
-
-```
-
-### 2. Create and activate a virtual environment
-
-```bash
-python -m venv venv 
-source venv/bin/activate # On Windows: venv\Scripts\activate
-```
-
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Create a `.env` file from `sample.env`
-
-settings.py is split into prod.py and dev.py so
-
-for development `.env`
-
-```ini
-DJANGO_SETTINGS_MODULE=library_service.settings.dev
-```
-
-fo production `.env`
-
-```ini
-DJANGO_SETTINGS_MODULE=library_service.settings.prod
-```
-
-### 5. Run migrations
-
-```bash
-python manage.py migrate
-```
-
-### 6. Create a superuser (optional)
-
-```bash
-python manage.py createsuperuser
-```
-
-### 7. Run selery along with celery-beat
-
-```bash
-celery -A library_service worker -B -l info
-```
-
-### 8. Run the server
-
-```bash
-python manage.py runserver
-```
 
 ## 🔑 Authentication
 
@@ -116,20 +55,20 @@ This project uses **JWT authentication** via `/api/users/token/` after registrat
 
 - Documentation for endpoints is provided by Swagger UI using `drf-spectacular`: url -`/api/doc/`
 
-### Tests
 
-```ini
-python manage.py test
-```
 
 ## Run in Docker
 create `docker-compose.yml`
 ```yaml
 services:
   library-service:
-    image: nick098/dev_lib-library-service:latest
+    image: nick098/library-service:postgres_dev
     ports:
       - "8080:8080"
+    command: >
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8080"
     env_file:
       - .env
     depends_on:
@@ -145,7 +84,8 @@ services:
       - my_db:/var/lib/postgresql/data
 
   celery-worker:
-    image: nick098/dev_lib-celery-worker:latest
+    image: nick098/celery-worker:postgres_dev
+    command: celery -A library_service worker -l info
     env_file:
       - .env
     depends_on:
@@ -154,7 +94,8 @@ services:
       - library-service
 
   celery-beat:
-    image: nick098/dev_lib-celery-beat:latest
+    image: nick098/celery-beat:postgres_dev
+    command: celery -A library_service beat -l info
     env_file:
       - .env
     depends_on:
@@ -171,12 +112,49 @@ volumes:
   my_db:
 
 ```
-then pull and run
+then pull and up
 ```bash
 docker compose pull
 docker compose up
 ```
+stop containers
+```bash
+docker compose stop
+```
+
+### Create a `.env` file from `sample.env`
+
+settings.py is split into prod.py and dev.py so
+
+for development `.env`
+
+```ini
+DJANGO_SETTINGS_MODULE=library_service.settings.dev
+```
+
+fo production `.env`
+
+```ini
+DJANGO_SETTINGS_MODULE=library_service.settings.prod
+```
+
+copy .env file to  application container
+
+```bash
+ docker cp .env <your_name_for_library-service_container>:/app/
+```
+
+start containers
+```bash
+docker compose start
+```
+
+Create a superuser
+
+```bash
+docker compose exec -it library-service bash
+```
 tests
 ```bash
-docker compose exec library-service python manage.py test
+docker compose exec -it library-service python manage.py test
 ```
