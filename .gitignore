@@ -9,6 +9,7 @@
 venv/
 .env
 *.env
+!sample.env
 
 # Django
 db.sqlite3
@@ -28,4 +29,11 @@ db.sqlite3
 pyproject.toml
 
 # Dumps
-dump.json
+dump*.json
+
+
+# Celery & Celery Beat runtime files
+celerybeat-schedule
+celerybeat-schedule.*
+celery.beat.*
+celery.loaders.*
